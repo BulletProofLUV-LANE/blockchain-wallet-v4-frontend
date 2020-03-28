@@ -1,3 +1,5 @@
+import { actions } from 'data'
+import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { Field } from 'redux-form'
 import { FormattedMessage } from 'react-intl'
@@ -32,7 +34,11 @@ type LinkStatePropsType = {
   >
 }
 
-type Props = OwnProps & LinkStatePropsType
+type LinkDispatchPropsType = {
+  modalActions: typeof actions.modals
+}
+
+type Props = OwnProps & LinkStatePropsType & LinkDispatchPropsType
 
 const Wrapper = styled.div`
   display: flex;
@@ -119,7 +125,7 @@ const CoinSelect = styled(SelectBox)`
   }
 
   .bc__option {
-    padding: 0px 8px;
+    padding: 0px 12px;
   }
 
   .bc__indicators {
@@ -131,6 +137,10 @@ const CoinSelect = styled(SelectBox)`
 
 export class WalletBalanceDropdown extends Component<Props> {
   state = {}
+
+  isBtcTypeCoin = () => {
+    return this.props.coin === 'BTC' || this.props.coin === 'BCH'
+  }
 
   isTotalBalanceType = selectProps => {
     // BTC/BCH
@@ -171,7 +181,7 @@ export class WalletBalanceDropdown extends Component<Props> {
   }
 
   // FIXME: TypeScript use value: { AccountTypes }
-  renderDisplay = (props: { value }, children) => {
+  renderDisplay = (props: { value }, children, handleRequest) => {
     const coinType = this.props.coinModel
     const balance = this.coinBalance(props)
     const account = this.accountLabel(props)
@@ -211,6 +221,20 @@ export class WalletBalanceDropdown extends Component<Props> {
               defaultMessage='today'
             />
           </PriceChange>
+          {balance <= 0 && (
+            <Text
+              size='14px'
+              weight={500}
+              color='blue600'
+              onClick={handleRequest}
+            >
+              <FormattedMessage
+                id='scenes.transactions.performance.request'
+                defaultMessage='Request {account} Now'
+                values={{ account: account }}
+              />
+            </Text>
+          )}
         </AccountContainer>
       </DisplayContainer>
     )
@@ -229,7 +253,7 @@ export class WalletBalanceDropdown extends Component<Props> {
           size='32px'
         />
         <AccountContainer isItem>
-          <Text weight={500} color='grey800' size='14px'>
+          <Text weight={500} color='grey400' size='14px'>
             {account}{' '}
             {this.isTotalBalanceType(props) && (
               <FormattedMessage
@@ -244,7 +268,7 @@ export class WalletBalanceDropdown extends Component<Props> {
               size='12px'
               weight={500}
               cursor='pointer'
-              color='grey400'
+              color='grey800'
             >
               {balance}
             </CoinDisplay>
@@ -269,6 +293,7 @@ export class WalletBalanceDropdown extends Component<Props> {
   }
 
   render () {
+    const { coin, modalActions } = this.props
     return this.props.data.cata({
       Success: values => {
         const { addressData } = values
@@ -278,6 +303,9 @@ export class WalletBalanceDropdown extends Component<Props> {
               component={CoinSelect}
               elements={addressData.data}
               grouped
+              handleRequest={() =>
+                modalActions.showModal(`@MODAL.REQUEST.${coin}`)
+              }
               hideIndicator={addressData.data.length <= 1}
               openMenuOnClick={addressData.data.length > 1}
               options={addressData.data}
@@ -300,4 +328,11 @@ const mapStateToProps = (state, ownProps): LinkStatePropsType => ({
   data: getData(state, ownProps)
 })
 
-export default connect(mapStateToProps)(WalletBalanceDropdown)
+const mapDispatchToProps = dispatch => ({
+  modalActions: bindActionCreators(actions.modals, dispatch)
+})
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(WalletBalanceDropdown)

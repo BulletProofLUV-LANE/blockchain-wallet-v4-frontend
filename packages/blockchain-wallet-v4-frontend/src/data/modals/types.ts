@@ -20,6 +20,7 @@ export type ModalNamesType =
   | 'UpgradeForAirdrop'
   | 'WELCOME_MODAL'
   | 'WHATS_NEW_MODAL'
+  | string
 
 export type ModalType = {
   options: any
