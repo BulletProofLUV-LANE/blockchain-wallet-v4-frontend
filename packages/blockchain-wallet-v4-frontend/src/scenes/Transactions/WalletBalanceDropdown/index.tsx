@@ -5,6 +5,7 @@ import { Field } from 'redux-form'
 import { FormattedMessage } from 'react-intl'
 import { getData } from './selectors'
 import { Icon, Text } from 'blockchain-info-components'
+import { ModalNamesType } from 'data/types'
 import { PriceChange } from '../model'
 import { RemoteDataType, SupportedCoinType } from 'core/types'
 import CoinDisplay from 'components/Display/CoinDisplay'
@@ -142,6 +143,11 @@ export class WalletBalanceDropdown extends Component<Props> {
     return this.props.coin === 'BTC' || this.props.coin === 'BCH'
   }
 
+  handleRequest = () => {
+    const modal = `@MODAL.REQUEST.${this.props.coin}` as ModalNamesType
+    this.props.modalActions.showModal(modal)
+  }
+
   isTotalBalanceType = selectProps => {
     // BTC/BCH
     if (selectProps.value === 'all') return true
@@ -181,7 +187,7 @@ export class WalletBalanceDropdown extends Component<Props> {
   }
 
   // FIXME: TypeScript use value: { AccountTypes }
-  renderDisplay = (props: { value }, children, handleRequest) => {
+  renderDisplay = (props: { value }, children) => {
     const coinType = this.props.coinModel
     const balance = this.coinBalance(props)
     const account = this.accountLabel(props)
@@ -226,7 +232,7 @@ export class WalletBalanceDropdown extends Component<Props> {
               size='14px'
               weight={500}
               color='blue600'
-              onClick={handleRequest}
+              onClick={this.handleRequest}
             >
               <FormattedMessage
                 id='scenes.transactions.performance.request'
@@ -293,7 +299,6 @@ export class WalletBalanceDropdown extends Component<Props> {
   }
 
   render () {
-    const { coin, modalActions } = this.props
     return this.props.data.cata({
       Success: values => {
         const { addressData } = values
@@ -303,9 +308,6 @@ export class WalletBalanceDropdown extends Component<Props> {
               component={CoinSelect}
               elements={addressData.data}
               grouped
-              handleRequest={() =>
-                modalActions.showModal(`@MODAL.REQUEST.${coin}`)
-              }
               hideIndicator={addressData.data.length <= 1}
               openMenuOnClick={addressData.data.length > 1}
               options={addressData.data}
